@@ -558,7 +558,8 @@ export default class DockerHubAPI {
       // Make sure the username is all lowercase as per Docker Hub requirements
       username = username.toLowerCase()
 
-      let obj = {
+      // TODO
+      let obj: any = {
         name,
         namespace: username,
       }
@@ -948,7 +949,7 @@ export default class DockerHubAPI {
    * @param {Object} details - an object with a the new details of the build tag
    * @returns {Promise}
    */
-  saveBuildTag(username, name, id, details) {
+  public saveBuildTag(username, name, id, details) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -987,6 +988,7 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * This sets the description (short, full, or both) for a given users repository.
    *
@@ -995,7 +997,11 @@ export default class DockerHubAPI {
    * @param {Object} descriptions - an object with a full, short, or both properties
    * @returns {Promise}
    */
-  setRepositoryDescription(username, name, descriptions) {
+  public setRepositoryDescription(
+    username: string,
+    name: string,
+    descriptions: any
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || !name || !descriptions) {
         return reject(
@@ -1017,7 +1023,7 @@ export default class DockerHubAPI {
         )
       }
 
-      let obj = {}
+      let obj: any = {}
 
       if (descriptions.full) {
         obj.full_description = descriptions.full
@@ -1040,19 +1046,18 @@ export default class DockerHubAPI {
    * @param {Boolean} privacy - if the repository should be private
    * @returns {Promise}
    */
-  setRepositoryPrivacy(username, name, privacy) {
+  public setRepositoryPrivacy(
+    username: string,
+    name: string,
+    privacy: boolean
+  ) {
     return new Promise((resolve, reject) => {
-      if (!username || !name || !descriptions) {
+      if (!username || !name) {
+        // || !descriptions) {
         return reject(
           new Error(
             'A username and repository name must be passed in as well as the data to set!'
           )
-        )
-      }
-
-      if (typeof privacy !== 'boolean') {
-        return reject(
-          new Error('Passed in privacy property must be a boolean!')
         )
       }
 
@@ -1070,26 +1075,26 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository
    * @returns {Promise}
    */
-  starRepository(username, name) {
-    return new Promise((resolve, reject) => {
-      if (username && !name) {
-        name = username
-        username = 'library'
-      }
+  public async starRepository(username: string, name: string): Promise<any> {
+    if (username && !name) {
+      name = username
+      username = 'library'
+    }
 
-      // If username is '_' then we're trying to get an official repository
-      if (username === '_') {
-        username = 'library'
-      }
+    // If username is '_' then we're trying to get an official repository
+    if (username === '_') {
+      username = 'library'
+    }
 
-      // Make sure the username is all lowercase as per Docker Hub requirements
-      username = username.toLowerCase()
+    // Make sure the username is all lowercase as per Docker Hub requirements
+    username = username.toLowerCase()
 
-      return this.makePostRequest(`repositories/${username}/${name}/stars/`, {})
-        .then(resolve)
-        .catch(reject)
-    })
+    return await this.makePostRequest(
+      `repositories/${username}/${name}/stars/`,
+      {}
+    )
   }
+
   /**
    * Gets the tags for a repository.
    *
@@ -1098,7 +1103,11 @@ export default class DockerHubAPI {
    * @param {{page: Number, perPage: Number}} [options] - the options for this call
    * @returns {Promise}
    */
-  tags(username, name, options) {
+  public tags(
+    username: string,
+    name: string | { page: number; perPage: number },
+    options: { page: number; perPage: number }
+  ): Promise<any> {
     // If no name is passed in, then the user wants an official repository
     if (username && !name && !options) {
       name = username
@@ -1175,7 +1184,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository
    * @returns {Promise}
    */
-  unstarRepository(username, name) {
+  public unstarRepository(username, name) {
     return new Promise((resolve, reject) => {
       if (username && !name) {
         name = username
@@ -1201,20 +1210,17 @@ export default class DockerHubAPI {
    * @param {String} username - the username to get information about
    * @returns {Promise}
    */
-  user(username) {
-    return new Promise((resolve, reject) => {
-      if (!username) {
-        return reject(new Error('Username must be provided!'))
-      }
+  public async user(username: string): Promise<any> {
+    if (!username) {
+      throw new Error('Username must be provided!')
+    }
 
-      // Make sure the username is all lowercase as per Docker Hub requirements
-      username = username.toLowerCase()
+    // Make sure the username is all lowercase as per Docker Hub requirements
+    username = username.toLowerCase()
 
-      this.makeGetRequest(`users/${username}`)
-        .then(resolve)
-        .catch(reject)
-    })
+    return await this.makeGetRequest(`users/${username}`)
   }
+
   /**
    * Gets the webhooks for a repository you own.
    *
@@ -1249,13 +1255,14 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * Checks the body response from a call to Docker Hub API to check if it's an error.
    *
    * @param {Object} body - the body response from the api
    * @returns {Boolean}
    */
-  bodyHasError(body) {
+  public bodyHasError(body) {
     let detailDefined = typeof body.detail !== 'undefined'
 
     // if there is an error object in the body, then there is likely an error
@@ -1335,7 +1342,7 @@ export default class DockerHubAPI {
    * @param {String} [extract] - the name of the property in the resulting JSON to extract. If left blank it will return the entire JSON
    * @returns {Promise}
    */
-  public makeDeleteRequest(path) {
+  public async makeDeleteRequest(path: string): Promise<any> {
     return new Promise((resolve, reject) => {
       request(this.makeRequestParams('delete', path), err => {
         if (err) {
@@ -1346,6 +1353,7 @@ export default class DockerHubAPI {
       })
     })
   }
+
   /**
    * Makes a raw patch request to the Docker Hub API.
    *
@@ -1385,6 +1393,7 @@ export default class DockerHubAPI {
       )
     })
   }
+
   /**
    * Makes a raw post request to the Docker Hub API.
    *
@@ -1422,6 +1431,7 @@ export default class DockerHubAPI {
       })
     })
   }
+
   /**
    * Makes a raw put request to the Docker Hub API.
    *

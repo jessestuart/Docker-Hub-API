@@ -1,0 +1,55 @@
+export default class DockerHubAPI {
+    constructor();
+    login(username: string, password: string): Promise<any>;
+    logout(): Promise<any>;
+    loggedInUser(): Promise<any>;
+    setCacheOptions(options: any): void;
+    setLoginToken(token: any): void;
+    addCollaborator(username: any, name: any, collaborator: any): Promise<unknown>;
+    buildDetails(username: any, name: any, code: any): Promise<unknown>;
+    buildHistory(username: any, name: any, options: any): Promise<unknown>;
+    buildLinks(username: any, name: any): Promise<unknown>;
+    buildSettings(username: any, name: any): Promise<unknown>;
+    buildTrigger(username: any, name: any): Promise<unknown>;
+    buildTriggerHistory(username: any, name: any): Promise<unknown>;
+    collaborators(username: any, name: any): Promise<unknown>;
+    comments(username: any, name: any, options: any): Promise<unknown>;
+    createBuildLink(username: any, name: any, to_repo: any): Promise<unknown>;
+    createBuildTag(username: any, name: any, details: any): Promise<unknown>;
+    createAutomatedBuild(username: any, name: any, details: any): Promise<unknown>;
+    createRepository(username: any, name: any, details: any): Promise<unknown>;
+    createWebhook(username: any, name: any, webhookName: any): Promise<unknown>;
+    createWebhookHook(username: any, name: any, webhookID: any, url: any): Promise<unknown>;
+    deleteBuildLink(username: any, name: any, id: any): Promise<unknown>;
+    deleteBuildTag(username: any, name: any, id: any): Promise<unknown>;
+    deleteCollaborator(username: any, name: any, collaborator: any): Promise<unknown>;
+    deleteRepository(username: any, name: any): Promise<unknown>;
+    deleteTag(username: any, name: any, tag: any): Promise<unknown>;
+    deleteWebhook(username: any, name: any, webhookID: any): Promise<unknown>;
+    registrySettings(): Promise<unknown>;
+    repository(username: any, name: any): Promise<any>;
+    repositories(username: any): Promise<unknown>;
+    repositoriesStarred(username: any, options: any): Promise<unknown>;
+    saveBuildTag(username: any, name: any, id: any, details: any): Promise<unknown>;
+    setRepositoryDescription(username: string, name: string, descriptions: any): Promise<any>;
+    setRepositoryPrivacy(username: string, name: string, privacy: boolean): Promise<unknown>;
+    starRepository(username: string, name: string): Promise<any>;
+    tags(username: string, name: string | {
+        page: number;
+        perPage: number;
+    }, options: {
+        page: number;
+        perPage: number;
+    }): Promise<any>;
+    triggerBuild(username: any, name: any, details: any): Promise<unknown>;
+    unstarRepository(username: any, name: any): Promise<unknown>;
+    user(username: string): Promise<any>;
+    webhooks(username: any, name: any, options: any): Promise<unknown>;
+    bodyHasError(body: any): boolean;
+    makeGetRequest(path: string, extract?: string): Promise<any>;
+    makeDeleteRequest(path: string): Promise<any>;
+    makePatchRequest(path: string, data?: object, extract?: string): Promise<unknown>;
+    makePostRequest(path: string, data?: object, extract?: string): Promise<any>;
+    makePutRequest(path: string, data: object, extract?: string): Promise<any>;
+    makeRequestParams(method: string, path: string, data?: object): any;
+}

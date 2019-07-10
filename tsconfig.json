@@ -5,9 +5,9 @@
     // Process & infer types from .js files.
     // "allowJs": true,
     // Don't emit; allow Babel to transform files.
-    /* "emitDeclarationOnly": true, */
+    "emitDeclarationOnly": true,
     // Enable strictest settings like strictNullChecks & noImplicitAny.
-    "strict": true,
+    "strict": false,
     // Disallow features that require cross-file information for emit.
     "isolatedModules": false,
     // Import non-ES modules as default imports.
@@ -18,7 +18,7 @@
     //    "inlineSources": true,
     "lib": ["dom", "esnext", "es5"],
     "module": "esnext",
-    "noEmit": true,
+    /* "noEmit": true, */
     // Search under node_modules for non-relative imports.
     "moduleResolution": "node",
     "noImplicitAny": false,
