@@ -1,0 +1,12 @@
+[ver:1,total:1620]
+src/api.ts:691,1562745600:691,m
+.gtm/terminal.app:409,1562745600:409,r
+api.d.ts:165,1562745600:165,m
+package.json:125,1562745600:125,m
+babel.config.js:85,1562745600:85,m
+tsconfig.json:45,1562745600:45,m
+nodemon.json:30,1562745600:30,r
+gulpfile.js:20,1562745600:20,d
+.travis.yml:20,1562745600:20,d
+src/example.ts:15,1562745600:15,r
+dist/api.js:15,1562745600:15,r
