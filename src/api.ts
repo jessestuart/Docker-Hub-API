@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+import _ from 'lodash'
 import request from 'request'
 
-let apiVersion = 2
+const API_VERSION = 2
 
 let cache = {}
 let cacheEnabled = true
@@ -25,8 +26,7 @@ let cacheTimeSeconds = 300
 
 let loggedInToken = null
 
-export default class DockerHubAPI {
-  public constructor() { }
+export default class {
   /**
    * This logs into Docker Hub with the given username and password.
    *
@@ -36,32 +36,28 @@ export default class DockerHubAPI {
    * @param {String} password - the password for that Docker Hub account
    * @returns {Promise}
    */
-  public login(username: string, password: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (!username || !password) {
-        return reject(
-          new Error(
-            'Both username and password must be passed to this function!'
-          )
-        )
-      }
+  public async login(username: string, password: string): Promise<any> {
+    if (!_.every([username, password])) {
+      throw new Error(
+        'Both username and password must be passed to this function!',
+      )
+    }
 
-      this.makePostRequest('users/login/', { username, password })
-        .then(info => {
-          if (!info.token) {
-            return reject(
-              new Error(
-                'Error logging into Docker Hub! No login token sent back!'
-              )
-            )
-          }
+    const info =
+      (await this.makePostRequest('users/login/', {
+        username,
+        password,
+      })) || {}
+    const { token } = info
+    if (_.isEmpty(token)) {
+      throw new Error(
+        'Error logging into Docker Hub! No login token sent back!',
+      )
+    }
 
-          loggedInToken = info.token
+    loggedInToken = token
 
-          return resolve(info)
-        })
-        .catch(reject)
-    })
+    return info
   }
 
   /**
@@ -74,8 +70,8 @@ export default class DockerHubAPI {
       if (!loggedInToken) {
         return reject(
           new Error(
-            'No login token found! Please login() or setLoginToken() to continue!'
-          )
+            'No login token found! Please login() or setLoginToken() to continue!',
+          ),
         )
       }
 
@@ -84,18 +80,19 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * This gets information about the current logged in user.
    *
    * @returns {Promise}
    */
-  loggedInUser(): Promise<any> {
+  public loggedInUser(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!loggedInToken) {
         return reject(
           new Error(
-            'No login token found! Please login() or setLoginToken() to continue!'
-          )
+            'No login token found! Please login() or setLoginToken() to continue!',
+          ),
         )
       }
 
@@ -104,12 +101,13 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * This will set the caching options.
    *
    * @param {{enabled: Boolean, time: Number}} options - the options to set for the caching options
    */
-  setCacheOptions(options) {
+  public setCacheOptions(options: { enabled: boolean; time: number }): void {
     if (typeof options.enabled !== 'undefined') {
       cacheEnabled = options.enabled
     }
@@ -126,7 +124,7 @@ export default class DockerHubAPI {
    *
    * @param {String} token - the login token for Docker Hub
    */
-  setLoginToken(token) {
+  public setLoginToken(token) {
     loggedInToken = token
   }
   /**
@@ -137,7 +135,7 @@ export default class DockerHubAPI {
    * @param {String} collaborator - the username of the collaborator to add
    * @returns {Promise}
    */
-  addCollaborator(username, name, collaborator) {
+  public addCollaborator(username, name, collaborator) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -162,6 +160,7 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * Gets the details for a given build of a repository.
    *
@@ -188,7 +187,7 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       this.makeGetRequest(
-        `repositories/${username}/${name}/buildhistory/${code}`
+        `repositories/${username}/${name}/buildhistory/${code}`,
       )
         .then(resolve)
         .catch(reject)
@@ -221,13 +220,14 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `repositories/${username}/${name}/buildhistory?page_size=${options.perPage ||
-        100}&page=${options.page || 1}`,
-        'results'
+          100}&page=${options.page || 1}`,
+        'results',
       )
         .then(resolve)
         .catch(reject)
     })
   }
+
   /**
    * Gets the build links for a given repository.
    *
@@ -235,7 +235,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to get the comments for
    * @returns {Promise}
    */
-  public buildLinks(username, name) {
+  public buildLinks(username: string, name: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -253,6 +253,7 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * Gets the build settings for a given repository.
    *
@@ -260,7 +261,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to get the comments for
    * @returns {Promise}
    */
-  public buildSettings(username, name) {
+  public buildSettings(username: string, name: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -285,7 +286,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to get the comments for
    * @returns {Promise}
    */
-  buildTrigger(username, name) {
+  public buildTrigger(username, name) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -325,7 +326,7 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `repositories/${username}/${name}/buildtrigger/history`,
-        'results'
+        'results',
       )
         .then(resolve)
         .catch(reject)
@@ -338,7 +339,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to get the collaborators for
    * @returns {Promise}
    */
-  collaborators(username, name) {
+  public collaborators(username, name) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -353,7 +354,7 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `repositories/${username}/${name}/collaborators`,
-        'results'
+        'results',
       )
         .then(resolve)
         .catch(reject)
@@ -367,7 +368,7 @@ export default class DockerHubAPI {
    * @param {{page: Number, perPage: Number}} [options] - the options for this call
    * @returns {Promise}
    */
-  comments(username, name, options) {
+  public comments(username, name, options) {
     return new Promise((resolve, reject) => {
       // If no name is passed in, then the user wants an official repository
       if (username && !name && !options) {
@@ -398,8 +399,8 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `repositories/${username}/${name}/comments?page_size=${options.perPage ||
-        100}&page=${options.page || 1}`,
-        'results'
+          100}&page=${options.page || 1}`,
+        'results',
       )
         .then(resolve)
         .catch(reject)
@@ -413,7 +414,7 @@ export default class DockerHubAPI {
    * @param {String} to_repo - the repo to link this automated build to
    * @returns {Promise}
    */
-  createBuildLink(username, name, to_repo) {
+  public createBuildLink(username, name, to_repo) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -455,7 +456,7 @@ export default class DockerHubAPI {
    * @param {Object} details - the details of the build tag
    * @returns {Promise}
    */
-  createBuildTag(username, name, details) {
+  public createBuildTag(username, name, details) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -473,19 +474,19 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       // Build our object to post
-      let obj = {
+      const obj = {
+        dockerfile_location: details.dockerfile_location || '/',
         isNew: true,
+        name: details.name || 'latest',
         namespace: username,
         repoName: name,
-        name: details.name || 'latest',
-        dockerfile_location: details.dockerfile_location || '/',
-        source_type: details.source_type || 'Branch',
         source_name: details.source_name || 'master',
+        source_type: details.source_type || 'Branch',
       }
 
       this.makePostRequest(
         `repositories/${username}/${name}/autobuild/tags`,
-        obj
+        obj,
       )
         .then(resolve)
         .catch(reject)
@@ -499,7 +500,11 @@ export default class DockerHubAPI {
    * @param {Object} details - the details of the new automated build
    * @returns {Promise}
    */
-  createAutomatedBuild(username, name, details) {
+  public createAutomatedBuild(
+    username: string,
+    name: string,
+    details: any,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -516,18 +521,18 @@ export default class DockerHubAPI {
       // Make sure the username is all lowercase as per Docker Hub requirements
       username = username.toLowerCase()
 
-      let obj = {
-        name,
-        namespace: username,
+      const obj = {
+        ...details,
         active: true,
         dockerhub_repo_name: `${username}/${name}`,
         is_private: false,
-        ...details,
+        name,
+        namespace: username,
       }
 
       return this.makePostRequest(
         `repositories/${username}/${name}/autobuild/`,
-        obj
+        obj,
       )
         .then(resolve)
         .catch(reject)
@@ -541,7 +546,11 @@ export default class DockerHubAPI {
    * @param {Object} details - the details of the new repository
    * @returns {Promise}
    */
-  createRepository(username, name, details) {
+  public createRepository(
+    username: string,
+    name: string,
+    details: any,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -559,7 +568,7 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       // TODO
-      let obj: any = {
+      const obj: any = {
         name,
         namespace: username,
       }
@@ -581,6 +590,7 @@ export default class DockerHubAPI {
         .catch(reject)
     })
   }
+
   /**
    * Creates a webhook for the given username and repository.
    *
@@ -589,7 +599,11 @@ export default class DockerHubAPI {
    * @param {String} webhookName - the name of webhook to create
    * @returns {Promise}
    */
-  createWebhook(username, name, webhookName) {
+  public createWebhook(
+    username: string,
+    name: string,
+    webhookName: string,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -610,12 +624,13 @@ export default class DockerHubAPI {
         `repositories/${username}/${name}/webhooks/`,
         {
           name: webhookName,
-        }
+        },
       )
         .then(resolve)
         .catch(reject)
     })
   }
+
   /**
    * Creates a hook for an existing webhook.
    *
@@ -625,7 +640,7 @@ export default class DockerHubAPI {
    * @param {String} url - the url of the hook to create
    * @returns {Promise}
    */
-  createWebhookHook(username, name, webhookID, url) {
+  public createWebhookHook(username, name, webhookID, url) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -650,12 +665,13 @@ export default class DockerHubAPI {
         `repositories/${username}/${name}/webhooks/${webhookID}/hooks/`,
         {
           hook_url: url,
-        }
+        },
       )
         .then(resolve)
         .catch(reject)
     })
   }
+
   /**
    * Deletes a build link for a given repository.
    *
@@ -664,7 +680,11 @@ export default class DockerHubAPI {
    * @param {Number} id - the id of the build link to delete
    * @returns {Promise}
    */
-  deleteBuildLink(username, name, id) {
+  public deleteBuildLink(
+    username: string,
+    name: string,
+    id: number,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -680,7 +700,7 @@ export default class DockerHubAPI {
 
       if (typeof id !== 'number' || id < 0) {
         return reject(
-          new Error('Build link id must be a number greater than 0!')
+          new Error('Build link id must be a number greater than 0!'),
         )
       }
 
@@ -700,7 +720,7 @@ export default class DockerHubAPI {
    * @param {Number} id - the id of the build tag to delete
    * @returns {Promise}
    */
-  deleteBuildTag(username, name, id) {
+  public deleteBuildTag(username, name, id) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -716,7 +736,7 @@ export default class DockerHubAPI {
 
       if (typeof id !== 'number' || id < 0) {
         return reject(
-          new Error('Build link id must be a number greater than 0!')
+          new Error('Build link id must be a number greater than 0!'),
         )
       }
 
@@ -724,7 +744,7 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       this.makeDeleteRequest(
-        `repositories/${username}/${name}/autobuild/tags/${id}`
+        `repositories/${username}/${name}/autobuild/tags/${id}`,
       )
         .then(resolve)
         .catch(reject)
@@ -738,7 +758,11 @@ export default class DockerHubAPI {
    * @param {String} collaborator - the username of the collaborator to delete
    * @returns {Promise}
    */
-  deleteCollaborator(username, name, collaborator) {
+  public deleteCollaborator(
+    username: string,
+    name: string,
+    collaborator: string,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -757,7 +781,7 @@ export default class DockerHubAPI {
       collaborator = collaborator.toLowerCase()
 
       this.makeDeleteRequest(
-        `repositories/${username}/${name}/collaborators/${collaborator}`
+        `repositories/${username}/${name}/collaborators/${collaborator}`,
       )
         .then(resolve)
         .catch(reject)
@@ -770,7 +794,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to delete
    * @returns {Promise}
    */
-  deleteRepository(username, name) {
+  public deleteRepository(username: string, name: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -796,7 +820,7 @@ export default class DockerHubAPI {
    * @param {String} tag - the tag to delete
    * @returns {Promise}
    */
-  deleteTag(username, name, tag) {
+  public deleteTag(username, name, tag) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -814,7 +838,7 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       return this.makeDeleteRequest(
-        `repositories/${username}/${name}/tags/${tag}/`
+        `repositories/${username}/${name}/tags/${tag}/`,
       )
         .then(resolve)
         .catch(reject)
@@ -828,7 +852,7 @@ export default class DockerHubAPI {
    * @param {Number} webhookID - the ID of webhook to delete
    * @returns {Promise}
    */
-  deleteWebhook(username, name, webhookID) {
+  public deleteWebhook(username, name, webhookID) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -846,18 +870,19 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       return this.makeDeleteRequest(
-        `repositories/${username}/${name}/webhooks/${webhookID}/`
+        `repositories/${username}/${name}/webhooks/${webhookID}/`,
       )
         .then(resolve)
         .catch(reject)
     })
   }
   /**
-   * This gets the registry settings for the current logged in user containing information about the number of private repositories used/available.
+   * This gets the registry settings for the current logged in user containing
+   * information about the number of private repositories used/available.
    *
    * @returns {Promise}
    */
-  registrySettings() {
+  public registrySettings(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.loggedInUser()
         .then(user => {
@@ -874,7 +899,7 @@ export default class DockerHubAPI {
    * @param {String} name - the name of the repository to get information about
    * @returns {Promise}
    */
-  repository(username, name) {
+  public async repository(username: string, name: string): Promise<any> {
     // If no name is passed in, then the user wants an official repository
     if (username && !name) {
       name = username
@@ -891,26 +916,22 @@ export default class DockerHubAPI {
 
     return this.makeGetRequest(`repositories/${username}/${name}`)
   }
+
   /**
    * Gets the repositories for a user.
    *
    * @param {String} username - the username to get the repositories for
    * @returns {Promise}
    */
-  repositories(username) {
+  public repositories(username: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      if (!username) {
-        return reject(new Error('Username must be provided!'))
-      }
-
       // Make sure the username is all lowercase as per Docker Hub requirements
-      username = username.toLowerCase()
-
-      this.makeGetRequest(`users/${username}/repositories`)
+      this.makeGetRequest(`users/${username.toLowerCase()}/repositories`)
         .then(resolve)
         .catch(reject)
     })
   }
+
   /**
    * Gets the starred repositories for a user.
    *
@@ -918,7 +939,10 @@ export default class DockerHubAPI {
    * @param {{page: Number, perPage: Number}} [options] - the options for this call
    * @returns {Promise}
    */
-  repositoriesStarred(username, options) {
+  public repositoriesStarred(
+    username: string,
+    options: { page: number; perPage: number },
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -933,8 +957,8 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `users/${username}/repositories/starred?page_size=${options.perPage ||
-        100}&page=${options.page || 1}`,
-        'results'
+          100}&page=${options.page || 1}`,
+        'results',
       )
         .then(resolve)
         .catch(reject)
@@ -972,17 +996,17 @@ export default class DockerHubAPI {
       }
 
       // Build our object to post
-      let obj = {
+      const obj = {
+        dockerfile_location: details.dockerfile_location || '/',
         id,
         name: details.name || 'latest',
-        dockerfile_location: details.dockerfile_location || '/',
-        source_type: details.source_type || 'Branch',
         source_name: details.source_name || 'master',
+        source_type: details.source_type || 'Branch',
       }
 
       return this.makePutRequest(
         `repositories/${username}/${name}/autobuild/tags/${id}`,
-        obj
+        obj,
       )
         .then(resolve)
         .catch(reject)
@@ -1000,14 +1024,14 @@ export default class DockerHubAPI {
   public setRepositoryDescription(
     username: string,
     name: string,
-    descriptions: any
+    descriptions: { full: any; short: any },
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || !name || !descriptions) {
         return reject(
           new Error(
-            'A username and repository name must be passed in as well as the data to set!'
-          )
+            'A username and repository name must be passed in as well as the data to set!',
+          ),
         )
       }
 
@@ -1018,12 +1042,12 @@ export default class DockerHubAPI {
       ) {
         return reject(
           new Error(
-            'Passed in descriptions must be an object with full and/or short properties!'
-          )
+            'Passed in descriptions must be an object with full and/or short properties!',
+          ),
         )
       }
 
-      let obj: any = {}
+      const obj: any = {}
 
       if (descriptions.full) {
         obj.full_description = descriptions.full
@@ -1049,15 +1073,15 @@ export default class DockerHubAPI {
   public setRepositoryPrivacy(
     username: string,
     name: string,
-    privacy: boolean
-  ) {
+    privacy: boolean,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || !name) {
         // || !descriptions) {
         return reject(
           new Error(
-            'A username and repository name must be passed in as well as the data to set!'
-          )
+            'A username and repository name must be passed in as well as the data to set!',
+          ),
         )
       }
 
@@ -1089,10 +1113,7 @@ export default class DockerHubAPI {
     // Make sure the username is all lowercase as per Docker Hub requirements
     username = username.toLowerCase()
 
-    return await this.makePostRequest(
-      `repositories/${username}/${name}/stars/`,
-      {}
-    )
+    return this.makePostRequest(`repositories/${username}/${name}/stars/`, {})
   }
 
   /**
@@ -1106,7 +1127,7 @@ export default class DockerHubAPI {
   public tags(
     username: string,
     name: string | { page: number; perPage: number },
-    options: { page: number; perPage: number }
+    options: { page: number; perPage: number },
   ): Promise<any> {
     // If no name is passed in, then the user wants an official repository
     if (username && !name && !options) {
@@ -1133,8 +1154,8 @@ export default class DockerHubAPI {
 
     return this.makeGetRequest(
       `repositories/${username}/${name}/tags?page_size=${options.perPage ||
-      100}&page=${options.page || 1}`,
-      'results'
+        100}&page=${options.page || 1}`,
+      'results',
     )
   }
   /**
@@ -1145,7 +1166,7 @@ export default class DockerHubAPI {
    * @param {Object} details - the details of the build tag
    * @returns {Promise}
    */
-  triggerBuild(username, name, details) {
+  public triggerBuild(username, name, details) {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -1163,7 +1184,7 @@ export default class DockerHubAPI {
       username = username.toLowerCase()
 
       // Build our object to post
-      let obj = {
+      const obj = {
         dockerfile_location: details.dockerfile_location || '/',
         source_type: details.source_type || 'Branch',
         source_name: details.source_name || 'master',
@@ -1171,12 +1192,13 @@ export default class DockerHubAPI {
 
       this.makePostRequest(
         `repositories/${username}/${name}/autobuild/trigger-build`,
-        obj
+        obj,
       )
         .then(resolve)
         .catch(reject)
     })
   }
+
   /**
    * This unstars a repository for the logged in user.
    *
@@ -1218,7 +1240,7 @@ export default class DockerHubAPI {
     // Make sure the username is all lowercase as per Docker Hub requirements
     username = username.toLowerCase()
 
-    return await this.makeGetRequest(`users/${username}`)
+    return this.makeGetRequest(`users/${username}`)
   }
 
   /**
@@ -1229,7 +1251,11 @@ export default class DockerHubAPI {
    * @param {{page: Number, perPage: Number}} [options] - the options for this call
    * @returns {Promise}
    */
-  webhooks(username, name, options) {
+  public webhooks(
+    username: string,
+    name: string,
+    options: { page: number; perPage: number },
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!username || typeof username !== 'string') {
         return reject(new Error('Username must be provided!'))
@@ -1248,8 +1274,8 @@ export default class DockerHubAPI {
 
       this.makeGetRequest(
         `repositories/${username}/${name}/repositories/webhooks?page_size=${options.perPage ||
-        100}&page=${options.page || 1}`,
-        'results'
+          100}&page=${options.page || 1}`,
+        'results',
       )
         .then(resolve)
         .catch(reject)
@@ -1262,8 +1288,8 @@ export default class DockerHubAPI {
    * @param {Object} body - the body response from the api
    * @returns {Boolean}
    */
-  public bodyHasError(body) {
-    let detailDefined = typeof body.detail !== 'undefined'
+  public bodyHasError(body: any): boolean {
+    const detailDefined = typeof body.detail !== 'undefined'
 
     // if there is an error object in the body, then there is likely an error
     if (typeof body.error !== 'undefined' && body.error === true) {
@@ -1300,7 +1326,7 @@ export default class DockerHubAPI {
    */
   public makeGetRequest(path: string, extract?: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      let params = this.makeRequestParams('get', path)
+      const params = this.makeRequestParams('get', path)
 
       if (cacheEnabled && cache.hasOwnProperty(params.url)) {
         if (Date.now() >= cache[params.url].expires) {
@@ -1367,8 +1393,8 @@ export default class DockerHubAPI {
       if (!data || typeof data !== 'object') {
         return reject(
           new Error(
-            'Data must be passed to all PATCH requests in the form of an object!'
-          )
+            'Data must be passed to all PATCH requests in the form of an object!',
+          ),
         )
       }
 
@@ -1389,7 +1415,7 @@ export default class DockerHubAPI {
           }
 
           return resolve(body)
-        }
+        },
       )
     })
   }
@@ -1405,7 +1431,7 @@ export default class DockerHubAPI {
   public makePostRequest(
     path: string,
     data?: object,
-    extract?: string
+    extract?: string,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       request(this.makeRequestParams('post', path, data), (err, _res, body) => {
@@ -1443,14 +1469,14 @@ export default class DockerHubAPI {
   public makePutRequest(
     path: string,
     data: object,
-    extract?: string
+    extract?: string,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!data || typeof data !== 'object') {
         return reject(
           new Error(
-            'Data must be passed to all PUT requests in the form of an object!'
-          )
+            'Data must be passed to all PUT requests in the form of an object!',
+          ),
         )
       }
 
@@ -1477,7 +1503,7 @@ export default class DockerHubAPI {
           }
 
           return resolve(body)
-        }
+        },
       )
     })
   }
@@ -1501,17 +1527,17 @@ export default class DockerHubAPI {
       path = path + '/'
     }
 
-    let url = `https://hub.docker.com/v${apiVersion}/${path}`
+    const url = `https://hub.docker.com/v${API_VERSION}/${path}`
 
     // TODO
-    let headers: any = {}
+    const headers: any = {}
 
     if (loggedInToken) {
       headers.Authorization = `JWT ${loggedInToken}`
     }
 
     // TODO
-    let params: any = { url, method, json: true, headers }
+    const params: any = { url, method, json: true, headers }
 
     if (data) {
       params.body = data

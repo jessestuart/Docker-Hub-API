@@ -1,5 +1,5 @@
 {
-  "exec": "yarn build && yalc push",
+  "exec": "yarn dev",
   "ext": "ts",
   "ignore": ["*.js", ".git/", "node_modules/"],
   "watch": "src/"

@@ -4,7 +4,6 @@ module.exports = {
     'plugin:import/typescript',
     'plugin:prettier/recommended', // Enables eslint-plugin-prettier and displays prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
     'plugin:promise/recommended',
-    'plugin:react/recommended',
     'prettier/@typescript-eslint', // Uses eslint-config-prettier to disable ESLint rules from @typescript-eslint/eslint-plugin that would conflict with prettier
   ],
   parser: '@typescript-eslint/parser',
@@ -32,6 +31,7 @@ module.exports = {
   },
   rules: {
     semi: ['error', 'never'],
+    'no-console': 'warn',
     'prettier/prettier': [
       'error',
       {
@@ -41,6 +41,7 @@ module.exports = {
         parser: 'typescript',
       },
     ],
+    'promise/always-return': 'off',
     '@typescript-eslint/camelcase': ['off'],
     '@typescript-eslint/explicit-function-return-type': ['off'],
     '@typescript-eslint/indent': ['error', 2],
@@ -51,10 +52,5 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': ['off'],
     '@typescript-eslint/no-use-before-define': ['off'],
     '@typescript-eslint/no-var-requires': ['off'],
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
   },
 }
